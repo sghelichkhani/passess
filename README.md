@@ -1,6 +1,5 @@
-# Passess
+# passess (**P**oissoin Equation analytical solutions (by which we **assess** numerical solutions))
 
-[![PyPI version](https://badge.fury.io/py/passess.svg)](https://badge.fury.io/py/passess)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A Python package providing analytical solutions to the Poisson equation for validating and benchmarking numerical solvers in gravitational physics and computational astrophysics.
@@ -18,10 +17,18 @@ Passess delivers exact analytical solutions to the gravitational Poisson problem
 
 ## Installation
 
-Install via pip:
+Install directly from GitHub:
 
 ```bash
-pip install passess
+pip install git+https://github.com/sghelichkhani/passess.git
+```
+
+Or clone the repository and install in development mode:
+
+```bash
+git clone https://github.com/sghelichkhani/passess.git
+cd passess
+pip install -e .
 ```
 
 ## Use Cases
