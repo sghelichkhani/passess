@@ -7,7 +7,7 @@ name = "passess"
 version = "0.1"
 description = "Analytical solutions to the Poisson equation for assessing numerical solvers"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
     { name = "Sia Ghelichkhani", email = "ghelichkhani.siavash@gmail.com" },
@@ -24,6 +24,7 @@ docs = [
     "matplotlib",
     "nbformat",
     "nbclient",
+    "nbconvert",
     "ipykernel",
     "quartodoc",
 ]
