@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "passess"
+version = "0.1"
+description = "Analytical solutions to the Poisson equation for assessing numerical solvers"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+    { name = "Sia Ghelichkhani", email = "ghelichkhani.siavash@gmail.com" },
+]
+dependencies = [
+    "numpy",
+    "scipy>=1.15.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+docs = [
+    "jupytext",
+    "matplotlib",
+    "nbformat",
+    "nbclient",
+    "ipykernel",
+    "quartodoc",
+]
+
+[tool.setuptools.packages.find]
+include = ["passess*"]
+exclude = ["tests*", "examples*", "docs*"]
+
+[tool.jupytext]
+formats = "py:percent"

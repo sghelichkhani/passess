@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+build/
+dist/
+.pytest_cache/
+
+# Environments
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+.cursor/
+.vscode/
+.idea/
+
+# Quarto / docs build artefacts
+docs/_site/
+docs/.quarto/
+docs/_freeze/
+docs/examples/*.ipynb
+docs/reference/
+docs/objects.json

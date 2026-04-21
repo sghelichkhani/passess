@@ -1,0 +1,67 @@
+project:
+  type: website
+  output-dir: _site
+  preview:
+    port: 4200
+
+website:
+  title: "passess"
+  description: "Analytical solutions to the Poisson equation for assessing numerical solvers."
+  repo-url: https://github.com/sghelichkhani/passess
+  repo-actions: [edit, issue]
+  navbar:
+    background: primary
+    left:
+      - href: index.qmd
+        text: Home
+      - text: Examples
+        menu:
+          - href: examples/dim2-polar.ipynb
+            text: "2D polar"
+          - href: examples/dim2-cartesian.ipynb
+            text: "2D Cartesian"
+      - href: reference/index.qmd
+        text: Reference
+    right:
+      - icon: github
+        href: https://github.com/sghelichkhani/passess
+  sidebar:
+    style: floating
+    contents:
+      - index.qmd
+      - section: "Examples"
+        contents:
+          - examples/dim2-polar.ipynb
+          - examples/dim2-cartesian.ipynb
+      - section: "Reference"
+        contents:
+          - reference/index.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code-copy: true
+    code-overflow: wrap
+    html-math-method: katex
+
+execute:
+  freeze: auto
+
+quartodoc:
+  package: passess
+  title: API Reference
+  style: pkgdown
+  dir: reference
+  sidebar: reference/_sidebar.yml
+  sections:
+    - title: Cartesian solvers
+      desc: Analytical Poisson solutions in 2D and 3D Cartesian geometry.
+      contents:
+        - cartesian.PoissonCartesian2D
+        - cartesian3d.PoissonCartesian3D
+    - title: Polar / spherical solvers
+      desc: Analytical Poisson solutions in curvilinear geometry.
+      contents:
+        - polar.PoissonPolar2D
+        - spherical.PoissonSpherical3D

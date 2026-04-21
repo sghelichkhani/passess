@@ -1,0 +1,49 @@
+---
+title: "passess"
+subtitle: "Analytical solutions to the Poisson equation for assessing numerical solvers"
+---
+
+`passess` provides closed-form solutions to the gravitational Poisson
+problem
+
+$$ \nabla^2 \psi = -4\pi\,\gamma\,\rho $$
+
+for a handful of geometries that are convenient for benchmarking numerical
+solvers: 2D Cartesian, 2D polar, 3D Cartesian, and 3D spherical. The
+package is deliberately narrow in scope; its job is to hand you a
+reference $\psi$ that a numerical solver can be compared against.
+
+## Where to start
+
+Two worked examples walk through the typical workflow of picking a
+geometry, instantiating a solver, and plotting the resulting density
+and potential side by side.
+
+- [2D polar — mass anomaly in a cylindrical shell](examples/dim2-polar.ipynb)
+- [2D Cartesian — mass anomaly in a depth layer](examples/dim2-cartesian.ipynb)
+
+Full derivations live next to the code on GitHub:
+
+- [solution-dim2-polar.md](https://github.com/sghelichkhani/passess/blob/main/solution-dim2-polar.md)
+- [solution-dim2-cartesian.md](https://github.com/sghelichkhani/passess/blob/main/solution-dim2-cartesian.md)
+- [solution-dim3-spherical.md](https://github.com/sghelichkhani/passess/blob/main/solution-dim3-spherical.md)
+- [solution-dim3-cartesian.md](https://github.com/sghelichkhani/passess/blob/main/solution-dim3-cartesian.md)
+
+The [API reference](reference/index.qmd) documents every public class in
+the package.
+
+## Installation
+
+```bash
+pip install git+https://github.com/sghelichkhani/passess.git
+```
+
+To build the documentation locally, install the `docs` extras and then
+render with Quarto:
+
+```bash
+pip install -e '.[docs]'
+cd docs
+quartodoc build
+quarto preview
+```
