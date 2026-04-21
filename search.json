@@ -1,0 +1,227 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "passess",
+    "section": "",
+    "text": "passess provides closed-form solutions to the gravitational Poisson problem\n\\nabla^2 \\psi = -4\\pi\\,\\gamma\\,\\rho\nfor a handful of geometries that are convenient for benchmarking numerical solvers: 2D Cartesian, 2D polar, 3D Cartesian, and 3D spherical. The package is deliberately narrow in scope; its job is to hand you a reference \\psi that a numerical solver can be compared against.",
+    "crumbs": [
+      "Home",
+      "passess"
+    ]
+  },
+  {
+    "objectID": "index.html#where-to-start",
+    "href": "index.html#where-to-start",
+    "title": "passess",
+    "section": "Where to start",
+    "text": "Where to start\nTwo worked examples walk through the typical workflow of picking a geometry, instantiating a solver, and plotting the resulting density and potential side by side.\n\n2D polar — mass anomaly in a cylindrical shell\n2D Cartesian — mass anomaly in a depth layer\n\nFull derivations live next to the code on GitHub:\n\nsolution-dim2-polar.md\nsolution-dim2-cartesian.md\nsolution-dim3-spherical.md\nsolution-dim3-cartesian.md\n\nThe API reference documents every public class in the package.",
+    "crumbs": [
+      "Home",
+      "passess"
+    ]
+  },
+  {
+    "objectID": "index.html#installation",
+    "href": "index.html#installation",
+    "title": "passess",
+    "section": "Installation",
+    "text": "Installation\npip install git+https://github.com/sghelichkhani/passess.git\nTo build the documentation locally, install the docs extras and then render with Quarto:\npip install -e '.[docs]'\ncd docs\nquartodoc build\nquarto preview",
+    "crumbs": [
+      "Home",
+      "passess"
+    ]
+  },
+  {
+    "objectID": "examples/dim2-polar.html",
+    "href": "examples/dim2-polar.html",
+    "title": "2D polar: gravitational potential of a mass anomaly in a shell",
+    "section": "",
+    "text": "This example shows how to use passess to evaluate the analytical solution of the 2D gravitational Poisson equation in polar coordinates for a single azimuthal Fourier mode of the density restricted to a cylindrical shell r_1 \\le r \\le r_2.\nThe full derivation lives in solution-dim2-polar.md. Here we only recall the governing equation,\n\\nabla^2 \\psi(r,\\phi) = -4\\pi \\gamma\\, \\rho(r,\\phi),\nand the modal density we will visualise:\n\\rho(r,\\phi) = \\rho_m\\, e^{i m \\phi}\n   \\quad \\text{for } r_1 \\le r \\le r_2, \\quad 0 \\text{ otherwise}.\npassess.polar.PoissonPolar2D returns the matching modal potential \\psi_m(r) evaluated on an arbitrary grid, including well outside the shell where the source vanishes but the potential still decays.\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom matplotlib.patches import Circle\n\nfrom passess.polar import PoissonPolar2D",
+    "crumbs": [
+      "Home",
+      "Examples",
+      "2D polar: gravitational potential of a mass anomaly in a shell"
+    ]
+  },
+  {
+    "objectID": "examples/dim2-polar.html#problem-setup",
+    "href": "examples/dim2-polar.html#problem-setup",
+    "title": "2D polar: gravitational potential of a mass anomaly in a shell",
+    "section": "Problem setup",
+    "text": "Problem setup\nLengths are non-dimensionalised by the mantle thickness D \\approx 2890~\\mathrm{km}. The mantle occupies the annular shell r \\in [r_\\mathrm{cmb}, r_\\mathrm{surf}] = [1.22, 2.22] (CMB radius in non-dim units is r_\\mathrm{cmb} = R_\\mathrm{cmb}/D \\approx 1.2).\nThe density anomaly is a thin shell of physical thickness 100~\\mathrm{km}, i.e. \\Delta = 100/2890 \\approx 0.0346 in non-dim units, sitting at mid-mantle and carrying an m = 4 azimuthal pattern.\n\n# Non-dimensionalisation: unit length = mantle thickness D = 2890 km.\nkm_nondim = 1.0 / 2890.0\n\n# Mantle geometry.\nr_cmb, r_surf = 1.22, 2.22\n\n# Density anomaly: 100 km thick shell at mid-mantle.\nr_mid = 0.5 * (r_cmb + r_surf)\ndelta = 100.0 * km_nondim\nr1 = r_mid - 0.5 * delta\nr2 = r_mid + 0.5 * delta\n\nm = 4\nrho_m = 1.0\ngamma = 1.0\n\nsolver = PoissonPolar2D(m=m, rho_m=rho_m, r1=r1, r2=r2, gamma=gamma)\n\n# Extended square domain: reach beyond the surface so far-field decay is visible.\nextent = 1.2 * r_surf\n# Use a fine grid so the 100 km thick anomaly shell is resolved.\nn = 801\nxs = np.linspace(-extent, extent, n)\nys = np.linspace(-extent, extent, n)\nX, Y = np.meshgrid(xs, ys)\nR = np.sqrt(X**2 + Y**2)\nPHI = np.arctan2(Y, X)\n\n# Avoid evaluating exactly at r = 0 (outside the domain of the solver).\nR_eval = np.where(R == 0.0, 1e-12, R)\n\n# The solver iterates over a flat array of radii, so we flatten for\n# evaluation and reshape the result back to the 2D grid.\nshape = R_eval.shape\nrho = solver.rho_to_spatial(R_eval.ravel(), PHI.ravel()).real.reshape(shape)\npsi = solver.to_spatial(R_eval.ravel(), PHI.ravel()).real.reshape(shape)",
+    "crumbs": [
+      "Home",
+      "Examples",
+      "2D polar: gravitational potential of a mass anomaly in a shell"
+    ]
+  },
+  {
+    "objectID": "examples/dim2-polar.html#visualise-density-and-potential",
+    "href": "examples/dim2-polar.html#visualise-density-and-potential",
+    "title": "2D polar: gravitational potential of a mass anomaly in a shell",
+    "section": "Visualise density and potential",
+    "text": "Visualise density and potential\nLeft panel: the density — non-zero only in the thin 100 km anomaly shell. Right panel: the gravitational potential on the full extended domain. In both panels the two black circles mark the CMB and surface so the reader can place where the mantle actually lives.\n\nfig, axes = plt.subplots(1, 2, figsize=(11, 5), constrained_layout=True)\n\ndef _outline_mantle(ax):\n    for radius in (r_cmb, r_surf):\n        ax.add_patch(Circle((0, 0), radius, fill=False,\n                             edgecolor=\"k\", linewidth=1.2))\n\nax = axes[0]\nim0 = ax.pcolormesh(X, Y, rho, shading=\"auto\", cmap=\"RdBu_r\",\n                    vmin=-abs(rho_m), vmax=abs(rho_m))\n_outline_mantle(ax)\nax.set_aspect(\"equal\")\nax.set_title(r\"Density $\\rho(r,\\phi)$ (real part)\")\nax.set_xlabel(\"x\")\nax.set_ylabel(\"y\")\nfig.colorbar(im0, ax=ax, shrink=0.85)\n\nax = axes[1]\nvmax = np.max(np.abs(psi))\nim1 = ax.pcolormesh(X, Y, psi, shading=\"auto\", cmap=\"RdBu_r\",\n                    vmin=-vmax, vmax=vmax)\n_outline_mantle(ax)\nax.set_aspect(\"equal\")\nax.set_title(r\"Potential $\\psi(r,\\phi)$ (real part)\")\nax.set_xlabel(\"x\")\nax.set_ylabel(\"y\")\nfig.colorbar(im1, ax=ax, shrink=0.85)\n\nplt.show()\n\n\n\n\n\n\n\n\nThe potential is smooth across the shell boundaries and decays as r^{-|m|} in the exterior, as expected from the m-th multipole of a compactly supported source.",
+    "crumbs": [
+      "Home",
+      "Examples",
+      "2D polar: gravitational potential of a mass anomaly in a shell"
+    ]
+  },
+  {
+    "objectID": "reference/index.html",
+    "href": "reference/index.html",
+    "title": "API Reference",
+    "section": "",
+    "text": "Analytical Poisson solutions in 2D and 3D Cartesian geometry.\n\n\n\ncartesian.PoissonCartesian2D\nGravitational potential for a single lateral Fourier mode of a depth layer.\n\n\ncartesian3d.PoissonCartesian3D\nGravitational potential for a single 2D Fourier mode of a depth layer.\n\n\n\n\n\n\nAnalytical Poisson solutions in curvilinear geometry.\n\n\n\npolar.PoissonPolar2D\nGravitational potential for a single azimuthal mode of a cylindrical shell.\n\n\nspherical.PoissonSpherical3D\nGravitational potential for a single spherical harmonic mode of a radial shell.",
+    "crumbs": [
+      "Home",
+      "Reference",
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "reference/index.html#cartesian-solvers",
+    "href": "reference/index.html#cartesian-solvers",
+    "title": "API Reference",
+    "section": "",
+    "text": "Analytical Poisson solutions in 2D and 3D Cartesian geometry.\n\n\n\ncartesian.PoissonCartesian2D\nGravitational potential for a single lateral Fourier mode of a depth layer.\n\n\ncartesian3d.PoissonCartesian3D\nGravitational potential for a single 2D Fourier mode of a depth layer.",
+    "crumbs": [
+      "Home",
+      "Reference",
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "reference/index.html#polar-spherical-solvers",
+    "href": "reference/index.html#polar-spherical-solvers",
+    "title": "API Reference",
+    "section": "",
+    "text": "Analytical Poisson solutions in curvilinear geometry.\n\n\n\npolar.PoissonPolar2D\nGravitational potential for a single azimuthal mode of a cylindrical shell.\n\n\nspherical.PoissonSpherical3D\nGravitational potential for a single spherical harmonic mode of a radial shell.",
+    "crumbs": [
+      "Home",
+      "Reference",
+      "API Reference"
+    ]
+  },
+  {
+    "objectID": "reference/cartesian3d.PoissonCartesian3D.html",
+    "href": "reference/cartesian3d.PoissonCartesian3D.html",
+    "title": "cartesian3d.PoissonCartesian3D",
+    "section": "",
+    "text": "cartesian3d.PoissonCartesian3D(kx, ky, rho_k, z1, z2, G_grav, z_ref=None)\nGravitational potential for a single 2D Fourier mode of a depth layer.\nGiven a density field rho(x, y, z) = rho_k * exp(i(kxx + kyy)) that is nonzero only for z1 &lt;= z’ &lt;= z2, computes the potential mode psi_k(z) satisfying the vertical ODE from 2D Fourier decomposition of the 3D Poisson equation.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nkx\nfloat\nHorizontal wavevector components.\nrequired\n\n\nky\nfloat\nHorizontal wavevector components.\nrequired\n\n\nrho_k\nfloat or complex\nConstant Fourier coefficient of the density on the layer.\nrequired\n\n\nz1\nfloat\nTop and bottom depths of the density layer (z1 &lt; z2).\nrequired\n\n\nz2\nfloat\nTop and bottom depths of the density layer (z1 &lt; z2).\nrequired\n\n\nG_grav\nfloat\nGravitational constant.\nrequired\n\n\nz_ref\nfloat\nReference depth where psi_0 = 0 (gauge fixing). Only used for k_h = 0.\nNone\n\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\npsi_k\nEvaluate the potential mode at depth z.\n\n\nrho_to_spatial\nEvaluate the spatial density rho_k * exp(i(kxx + kyy)).\n\n\nto_spatial\nEvaluate the spatial potential psi_k(z) * exp(i(kxx + kyy)).\n\n\n\n\n\ncartesian3d.PoissonCartesian3D.psi_k(z)\nEvaluate the potential mode at depth z.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nfloat, complex, or ndarray\nThe potential mode psi_k(z). Complex if rho_k is complex.\n\n\n\n\n\n\n\ncartesian3d.PoissonCartesian3D.rho_to_spatial(x, y, z)\nEvaluate the spatial density rho_k * exp(i(kxx + kyy)).\nReturns rho_k for z1 &lt;= z &lt;= z2, zero otherwise.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nx\nfloat or array_like\nHorizontal coordinates.\nrequired\n\n\ny\nfloat or array_like\nHorizontal coordinates.\nrequired\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial density contribution from this mode.\n\n\n\n\n\n\n\ncartesian3d.PoissonCartesian3D.to_spatial(x, y, z)\nEvaluate the spatial potential psi_k(z) * exp(i(kxx + kyy)).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nx\nfloat or array_like\nHorizontal coordinates.\nrequired\n\n\ny\nfloat or array_like\nHorizontal coordinates.\nrequired\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial field contribution from this mode."
+  },
+  {
+    "objectID": "reference/cartesian3d.PoissonCartesian3D.html#parameters",
+    "href": "reference/cartesian3d.PoissonCartesian3D.html#parameters",
+    "title": "cartesian3d.PoissonCartesian3D",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nkx\nfloat\nHorizontal wavevector components.\nrequired\n\n\nky\nfloat\nHorizontal wavevector components.\nrequired\n\n\nrho_k\nfloat or complex\nConstant Fourier coefficient of the density on the layer.\nrequired\n\n\nz1\nfloat\nTop and bottom depths of the density layer (z1 &lt; z2).\nrequired\n\n\nz2\nfloat\nTop and bottom depths of the density layer (z1 &lt; z2).\nrequired\n\n\nG_grav\nfloat\nGravitational constant.\nrequired\n\n\nz_ref\nfloat\nReference depth where psi_0 = 0 (gauge fixing). Only used for k_h = 0.\nNone"
+  },
+  {
+    "objectID": "reference/cartesian3d.PoissonCartesian3D.html#methods",
+    "href": "reference/cartesian3d.PoissonCartesian3D.html#methods",
+    "title": "cartesian3d.PoissonCartesian3D",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\npsi_k\nEvaluate the potential mode at depth z.\n\n\nrho_to_spatial\nEvaluate the spatial density rho_k * exp(i(kxx + kyy)).\n\n\nto_spatial\nEvaluate the spatial potential psi_k(z) * exp(i(kxx + kyy)).\n\n\n\n\n\ncartesian3d.PoissonCartesian3D.psi_k(z)\nEvaluate the potential mode at depth z.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nfloat, complex, or ndarray\nThe potential mode psi_k(z). Complex if rho_k is complex.\n\n\n\n\n\n\n\ncartesian3d.PoissonCartesian3D.rho_to_spatial(x, y, z)\nEvaluate the spatial density rho_k * exp(i(kxx + kyy)).\nReturns rho_k for z1 &lt;= z &lt;= z2, zero otherwise.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nx\nfloat or array_like\nHorizontal coordinates.\nrequired\n\n\ny\nfloat or array_like\nHorizontal coordinates.\nrequired\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial density contribution from this mode.\n\n\n\n\n\n\n\ncartesian3d.PoissonCartesian3D.to_spatial(x, y, z)\nEvaluate the spatial potential psi_k(z) * exp(i(kxx + kyy)).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nx\nfloat or array_like\nHorizontal coordinates.\nrequired\n\n\ny\nfloat or array_like\nHorizontal coordinates.\nrequired\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial field contribution from this mode."
+  },
+  {
+    "objectID": "reference/spherical.PoissonSpherical3D.html",
+    "href": "reference/spherical.PoissonSpherical3D.html",
+    "title": "spherical.PoissonSpherical3D",
+    "section": "",
+    "text": "spherical.PoissonSpherical3D(l, m, rho_lm, r1, r2, G_grav)\nGravitational potential for a single spherical harmonic mode of a radial shell.\nGiven a density field rho(r, theta, phi) = rho_lm * Y_l^m(theta, phi) that is nonzero only for r1 &lt;= r’ &lt;= r2, computes the potential mode psi_lm(r) satisfying the radial ODE from spherical harmonic decomposition of the 3D Poisson equation.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nl\nint\nSpherical harmonic degree (l &gt;= 0).\nrequired\n\n\nm\nint\nSpherical harmonic order (|m| &lt;= l).\nrequired\n\n\nrho_lm\nfloat or complex\nConstant spherical harmonic coefficient of the density on the shell.\nrequired\n\n\nr1\nfloat\nInner and outer radii of the density shell (0 &lt; r1 &lt; r2).\nrequired\n\n\nr2\nfloat\nInner and outer radii of the density shell (0 &lt; r1 &lt; r2).\nrequired\n\n\nG_grav\nfloat\nGravitational constant.\nrequired\n\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\npsi_lm\nEvaluate the radial potential mode at r.\n\n\nrho_to_spatial\nEvaluate the spatial density rho_lm * Y_l^m(theta, phi).\n\n\nto_spatial\nEvaluate the spatial potential psi_lm(r) * Y_l^m(theta, phi).\n\n\n\n\n\nspherical.PoissonSpherical3D.psi_lm(r)\nEvaluate the radial potential mode at r.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s). Must be positive.\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nfloat, complex, or ndarray\nThe potential mode psi_lm(r). Complex if rho_lm is complex.\n\n\n\n\n\n\n\nspherical.PoissonSpherical3D.rho_to_spatial(r, theta, phi)\nEvaluate the spatial density rho_lm * Y_l^m(theta, phi).\nReturns rho_lm * Y_l^m for r1 &lt;= r &lt;= r2, zero otherwise.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s).\nrequired\n\n\ntheta\nfloat or array_like\nColatitude(s).\nrequired\n\n\nphi\nfloat or array_like\nLongitude(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial density contribution from this mode.\n\n\n\n\n\n\n\nspherical.PoissonSpherical3D.to_spatial(r, theta, phi)\nEvaluate the spatial potential psi_lm(r) * Y_l^m(theta, phi).\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s).\nrequired\n\n\ntheta\nfloat or array_like\nColatitude(s) in [0, pi].\nrequired\n\n\nphi\nfloat or array_like\nLongitude(s) in [0, 2*pi].\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial field contribution from this mode."
+  },
+  {
+    "objectID": "reference/spherical.PoissonSpherical3D.html#parameters",
+    "href": "reference/spherical.PoissonSpherical3D.html#parameters",
+    "title": "spherical.PoissonSpherical3D",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nl\nint\nSpherical harmonic degree (l &gt;= 0).\nrequired\n\n\nm\nint\nSpherical harmonic order (|m| &lt;= l).\nrequired\n\n\nrho_lm\nfloat or complex\nConstant spherical harmonic coefficient of the density on the shell.\nrequired\n\n\nr1\nfloat\nInner and outer radii of the density shell (0 &lt; r1 &lt; r2).\nrequired\n\n\nr2\nfloat\nInner and outer radii of the density shell (0 &lt; r1 &lt; r2).\nrequired\n\n\nG_grav\nfloat\nGravitational constant.\nrequired"
+  },
+  {
+    "objectID": "reference/spherical.PoissonSpherical3D.html#methods",
+    "href": "reference/spherical.PoissonSpherical3D.html#methods",
+    "title": "spherical.PoissonSpherical3D",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\npsi_lm\nEvaluate the radial potential mode at r.\n\n\nrho_to_spatial\nEvaluate the spatial density rho_lm * Y_l^m(theta, phi).\n\n\nto_spatial\nEvaluate the spatial potential psi_lm(r) * Y_l^m(theta, phi).\n\n\n\n\n\nspherical.PoissonSpherical3D.psi_lm(r)\nEvaluate the radial potential mode at r.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s). Must be positive.\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nfloat, complex, or ndarray\nThe potential mode psi_lm(r). Complex if rho_lm is complex.\n\n\n\n\n\n\n\nspherical.PoissonSpherical3D.rho_to_spatial(r, theta, phi)\nEvaluate the spatial density rho_lm * Y_l^m(theta, phi).\nReturns rho_lm * Y_l^m for r1 &lt;= r &lt;= r2, zero otherwise.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s).\nrequired\n\n\ntheta\nfloat or array_like\nColatitude(s).\nrequired\n\n\nphi\nfloat or array_like\nLongitude(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial density contribution from this mode.\n\n\n\n\n\n\n\nspherical.PoissonSpherical3D.to_spatial(r, theta, phi)\nEvaluate the spatial potential psi_lm(r) * Y_l^m(theta, phi).\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s).\nrequired\n\n\ntheta\nfloat or array_like\nColatitude(s) in [0, pi].\nrequired\n\n\nphi\nfloat or array_like\nLongitude(s) in [0, 2*pi].\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial field contribution from this mode."
+  },
+  {
+    "objectID": "reference/polar.PoissonPolar2D.html",
+    "href": "reference/polar.PoissonPolar2D.html",
+    "title": "polar.PoissonPolar2D",
+    "section": "",
+    "text": "polar.PoissonPolar2D(m, rho_m, r1, r2, gamma, r_ref=None)\nGravitational potential for a single azimuthal mode of a cylindrical shell.\nGiven a density field rho(r, phi) = rho_m * exp(i m phi) that is nonzero only for r1 &lt;= r’ &lt;= r2, computes the potential mode psi_m(r) satisfying the radial ODE that arises from Fourier decomposition of the 2D Poisson equation.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nm\nint\nAzimuthal wavenumber.\nrequired\n\n\nrho_m\nfloat or complex\nConstant Fourier coefficient of the density on the shell.\nrequired\n\n\nr1\nfloat\nInner and outer radii of the density shell (r1 &lt; r2, both &gt; 0).\nrequired\n\n\nr2\nfloat\nInner and outer radii of the density shell (r1 &lt; r2, both &gt; 0).\nrequired\n\n\ngamma\nfloat\nGravitational constant.\nrequired\n\n\nr_ref\nfloat\nReference radius where psi_0 = 0 (gauge fixing). Only used for m = 0.\nNone\n\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\npsi_m\nEvaluate the radial potential mode at r.\n\n\nrho_to_spatial\nEvaluate the spatial density rho_m * exp(i m phi).\n\n\nto_spatial\nEvaluate the spatial potential psi_m(r) * exp(i m phi).\n\n\n\n\n\npolar.PoissonPolar2D.psi_m(r)\nEvaluate the radial potential mode at r.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s). Must be positive.\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nfloat, complex, or ndarray\nThe potential mode psi_m(r). Complex if rho_m is complex.\n\n\n\n\n\n\n\npolar.PoissonPolar2D.rho_to_spatial(r, phi)\nEvaluate the spatial density rho_m * exp(i m phi).\nReturns rho_m for r1 &lt;= r &lt;= r2, zero otherwise.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s).\nrequired\n\n\nphi\nfloat or array_like\nAzimuthal angle(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial density contribution from this mode.\n\n\n\n\n\n\n\npolar.PoissonPolar2D.to_spatial(r, phi)\nEvaluate the spatial potential psi_m(r) * exp(i m phi).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s).\nrequired\n\n\nphi\nfloat or array_like\nAzimuthal angle(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial field contribution from this mode."
+  },
+  {
+    "objectID": "reference/polar.PoissonPolar2D.html#parameters",
+    "href": "reference/polar.PoissonPolar2D.html#parameters",
+    "title": "polar.PoissonPolar2D",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nm\nint\nAzimuthal wavenumber.\nrequired\n\n\nrho_m\nfloat or complex\nConstant Fourier coefficient of the density on the shell.\nrequired\n\n\nr1\nfloat\nInner and outer radii of the density shell (r1 &lt; r2, both &gt; 0).\nrequired\n\n\nr2\nfloat\nInner and outer radii of the density shell (r1 &lt; r2, both &gt; 0).\nrequired\n\n\ngamma\nfloat\nGravitational constant.\nrequired\n\n\nr_ref\nfloat\nReference radius where psi_0 = 0 (gauge fixing). Only used for m = 0.\nNone"
+  },
+  {
+    "objectID": "reference/polar.PoissonPolar2D.html#methods",
+    "href": "reference/polar.PoissonPolar2D.html#methods",
+    "title": "polar.PoissonPolar2D",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\npsi_m\nEvaluate the radial potential mode at r.\n\n\nrho_to_spatial\nEvaluate the spatial density rho_m * exp(i m phi).\n\n\nto_spatial\nEvaluate the spatial potential psi_m(r) * exp(i m phi).\n\n\n\n\n\npolar.PoissonPolar2D.psi_m(r)\nEvaluate the radial potential mode at r.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s). Must be positive.\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nfloat, complex, or ndarray\nThe potential mode psi_m(r). Complex if rho_m is complex.\n\n\n\n\n\n\n\npolar.PoissonPolar2D.rho_to_spatial(r, phi)\nEvaluate the spatial density rho_m * exp(i m phi).\nReturns rho_m for r1 &lt;= r &lt;= r2, zero otherwise.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s).\nrequired\n\n\nphi\nfloat or array_like\nAzimuthal angle(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial density contribution from this mode.\n\n\n\n\n\n\n\npolar.PoissonPolar2D.to_spatial(r, phi)\nEvaluate the spatial potential psi_m(r) * exp(i m phi).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nr\nfloat or array_like\nRadial coordinate(s).\nrequired\n\n\nphi\nfloat or array_like\nAzimuthal angle(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial field contribution from this mode."
+  },
+  {
+    "objectID": "reference/cartesian.PoissonCartesian2D.html",
+    "href": "reference/cartesian.PoissonCartesian2D.html",
+    "title": "cartesian.PoissonCartesian2D",
+    "section": "",
+    "text": "cartesian.PoissonCartesian2D(k, rho_k, z1, z2, gamma, z_ref=None)\nGravitational potential for a single lateral Fourier mode of a depth layer.\nGiven a density field rho(x, z) = rho_k * exp(i k x) that is nonzero only for z1 &lt;= z’ &lt;= z2, computes the potential mode psi_k(z) satisfying the vertical ODE that arises from Fourier decomposition of the 2D Poisson equation.\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nk\nfloat\nLateral wavenumber.\nrequired\n\n\nrho_k\nfloat or complex\nConstant Fourier coefficient of the density on the layer.\nrequired\n\n\nz1\nfloat\nTop and bottom depths of the density layer (z1 &lt; z2).\nrequired\n\n\nz2\nfloat\nTop and bottom depths of the density layer (z1 &lt; z2).\nrequired\n\n\ngamma\nfloat\nGravitational constant.\nrequired\n\n\nz_ref\nfloat\nReference depth where psi_0 = 0 (gauge fixing). Only used for k = 0.\nNone\n\n\n\n\n\n\n\n\n\nName\nDescription\n\n\n\n\npsi_k\nEvaluate the potential mode at depth z.\n\n\nrho_to_spatial\nEvaluate the spatial density rho_k * exp(i k x).\n\n\nto_spatial\nEvaluate the spatial potential psi_k(z) * exp(i k x).\n\n\n\n\n\ncartesian.PoissonCartesian2D.psi_k(z)\nEvaluate the potential mode at depth z.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nfloat, complex, or ndarray\nThe potential mode psi_k(z). Complex if rho_k is complex.\n\n\n\n\n\n\n\ncartesian.PoissonCartesian2D.rho_to_spatial(x, z)\nEvaluate the spatial density rho_k * exp(i k x).\nReturns rho_k for z1 &lt;= z &lt;= z2, zero otherwise.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nx\nfloat or array_like\nLateral coordinate(s).\nrequired\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial density contribution from this mode.\n\n\n\n\n\n\n\ncartesian.PoissonCartesian2D.to_spatial(x, z)\nEvaluate the spatial potential psi_k(z) * exp(i k x).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nx\nfloat or array_like\nLateral coordinate(s).\nrequired\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial field contribution from this mode."
+  },
+  {
+    "objectID": "reference/cartesian.PoissonCartesian2D.html#parameters",
+    "href": "reference/cartesian.PoissonCartesian2D.html#parameters",
+    "title": "cartesian.PoissonCartesian2D",
+    "section": "",
+    "text": "Name\nType\nDescription\nDefault\n\n\n\n\nk\nfloat\nLateral wavenumber.\nrequired\n\n\nrho_k\nfloat or complex\nConstant Fourier coefficient of the density on the layer.\nrequired\n\n\nz1\nfloat\nTop and bottom depths of the density layer (z1 &lt; z2).\nrequired\n\n\nz2\nfloat\nTop and bottom depths of the density layer (z1 &lt; z2).\nrequired\n\n\ngamma\nfloat\nGravitational constant.\nrequired\n\n\nz_ref\nfloat\nReference depth where psi_0 = 0 (gauge fixing). Only used for k = 0.\nNone"
+  },
+  {
+    "objectID": "reference/cartesian.PoissonCartesian2D.html#methods",
+    "href": "reference/cartesian.PoissonCartesian2D.html#methods",
+    "title": "cartesian.PoissonCartesian2D",
+    "section": "",
+    "text": "Name\nDescription\n\n\n\n\npsi_k\nEvaluate the potential mode at depth z.\n\n\nrho_to_spatial\nEvaluate the spatial density rho_k * exp(i k x).\n\n\nto_spatial\nEvaluate the spatial potential psi_k(z) * exp(i k x).\n\n\n\n\n\ncartesian.PoissonCartesian2D.psi_k(z)\nEvaluate the potential mode at depth z.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\nfloat, complex, or ndarray\nThe potential mode psi_k(z). Complex if rho_k is complex.\n\n\n\n\n\n\n\ncartesian.PoissonCartesian2D.rho_to_spatial(x, z)\nEvaluate the spatial density rho_k * exp(i k x).\nReturns rho_k for z1 &lt;= z &lt;= z2, zero otherwise.\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nx\nfloat or array_like\nLateral coordinate(s).\nrequired\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial density contribution from this mode.\n\n\n\n\n\n\n\ncartesian.PoissonCartesian2D.to_spatial(x, z)\nEvaluate the spatial potential psi_k(z) * exp(i k x).\n\n\n\n\n\nName\nType\nDescription\nDefault\n\n\n\n\nx\nfloat or array_like\nLateral coordinate(s).\nrequired\n\n\nz\nfloat or array_like\nDepth coordinate(s).\nrequired\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nName\nType\nDescription\n\n\n\n\n\ncomplex or ndarray\nThe complex spatial field contribution from this mode."
+  },
+  {
+    "objectID": "examples/dim2-cartesian.html",
+    "href": "examples/dim2-cartesian.html",
+    "title": "2D Cartesian: gravitational potential of a depth layer",
+    "section": "",
+    "text": "This example uses passess to evaluate the analytical solution of the 2D Cartesian gravitational Poisson equation for a single lateral Fourier mode of the density confined to a horizontal layer z_1 \\le z \\le z_2.\nThe derivation is given in solution-dim2-cartesian.md. Here we simply recall\n\\nabla^2 \\psi(x,z) = -4\\pi \\gamma\\, \\rho(x,z),\nwith the modal density used below:\n\\rho(x,z) = \\rho_k\\, e^{i k x}\n   \\quad \\text{for } z_1 \\le z \\le z_2, \\quad 0 \\text{ otherwise}.\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom matplotlib.patches import Rectangle\n\nfrom passess.cartesian import PoissonCartesian2D",
+    "crumbs": [
+      "Home",
+      "Examples",
+      "2D Cartesian: gravitational potential of a depth layer"
+    ]
+  },
+  {
+    "objectID": "examples/dim2-cartesian.html#problem-setup",
+    "href": "examples/dim2-cartesian.html#problem-setup",
+    "title": "2D Cartesian: gravitational potential of a depth layer",
+    "section": "Problem setup",
+    "text": "Problem setup\nLengths are non-dimensionalised by the mantle thickness D \\approx 2890~\\mathrm{km}. The mantle occupies z \\in [0, 1], with z = 0 at the surface and z = 1 at the CMB.\nThe density anomaly is a thin slab of physical thickness 100~\\mathrm{km}, i.e. \\Delta = 100/2890 \\approx 0.0346 in non-dim units, sitting at mid-mantle and carrying a single lateral Fourier mode with wavenumber k = 2\\pi (one wavelength per unit of x).\n\n# Non-dimensionalisation: unit length = mantle thickness D = 2890 km.\nkm_nondim = 1.0 / 2890.0\n\n# Mantle geometry.\nz_surf, z_cmb = 0.0, 1.0\n\n# Density anomaly: 100 km thick slab at mid-mantle.\nz_mid = 0.5 * (z_surf + z_cmb)\ndelta = 100.0 * km_nondim\nz1 = z_mid - 0.5 * delta\nz2 = z_mid + 0.5 * delta\n\nk = 2.0 * np.pi\nrho_k = 1.0\ngamma = 1.0\n\nsolver = PoissonCartesian2D(k=k, rho_k=rho_k, z1=z1, z2=z2, gamma=gamma)\n\n# Extended domain: several wavelengths in x, and above/below the mantle in z.\nx_extent = 2.0  # two wavelengths since k = 2 pi\nz_min, z_max = z_surf - 0.4, z_cmb + 0.4\n\n# Fine grid so the 100 km anomaly slab is resolved.\nnx, nz = 401, 801\nxs = np.linspace(-x_extent / 2.0, x_extent / 2.0, nx)\nzs = np.linspace(z_min, z_max, nz)\nX, Z = np.meshgrid(xs, zs)\n\n# The solver iterates over a flat array of z values, so flatten and\n# reshape back to the 2D grid.\nshape = X.shape\nrho = solver.rho_to_spatial(X.ravel(), Z.ravel()).real.reshape(shape)\npsi = solver.to_spatial(X.ravel(), Z.ravel()).real.reshape(shape)",
+    "crumbs": [
+      "Home",
+      "Examples",
+      "2D Cartesian: gravitational potential of a depth layer"
+    ]
+  },
+  {
+    "objectID": "examples/dim2-cartesian.html#visualise-density-and-potential",
+    "href": "examples/dim2-cartesian.html#visualise-density-and-potential",
+    "title": "2D Cartesian: gravitational potential of a depth layer",
+    "section": "Visualise density and potential",
+    "text": "Visualise density and potential\nLeft panel: the density — non-zero only inside the thin 100 km anomaly slab. Right panel: the potential on the full extended domain. In both panels the rectangle marks the mantle (0 \\le z \\le 1).\n\nfig, axes = plt.subplots(1, 2, figsize=(11, 5), constrained_layout=True)\n\ndef _outline_mantle(ax):\n    ax.add_patch(Rectangle((xs[0], z_surf), xs[-1] - xs[0], z_cmb - z_surf,\n                            fill=False, edgecolor=\"k\", linewidth=1.2))\n\nax = axes[0]\nim0 = ax.pcolormesh(X, Z, rho, shading=\"auto\", cmap=\"RdBu_r\",\n                    vmin=-abs(rho_k), vmax=abs(rho_k))\n_outline_mantle(ax)\nax.invert_yaxis()\nax.set_title(r\"Density $\\rho(x,z)$ (real part)\")\nax.set_xlabel(\"x\")\nax.set_ylabel(\"z (depth)\")\nfig.colorbar(im0, ax=ax, shrink=0.85)\n\nax = axes[1]\nvmax = np.max(np.abs(psi))\nim1 = ax.pcolormesh(X, Z, psi, shading=\"auto\", cmap=\"RdBu_r\",\n                    vmin=-vmax, vmax=vmax)\n_outline_mantle(ax)\nax.invert_yaxis()\nax.set_title(r\"Potential $\\psi(x,z)$ (real part)\")\nax.set_xlabel(\"x\")\nax.set_ylabel(\"z (depth)\")\nfig.colorbar(im1, ax=ax, shrink=0.85)\n\nplt.show()\n\n\n\n\n\n\n\n\nOutside the layer the potential decays as e^{-|k||z - z_{\\rm layer}|}, which is the expected behaviour for a compactly supported source in a single lateral Fourier mode.",
+    "crumbs": [
+      "Home",
+      "Examples",
+      "2D Cartesian: gravitational potential of a depth layer"
+    ]
+  }
+]
