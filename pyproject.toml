@@ -26,7 +26,8 @@ docs = [
     "nbclient",
     "nbconvert",
     "ipykernel",
-    "quartodoc",
+    "quartodoc>=0.11",
+    "griffe<2",
 ]
 
 [tool.setuptools.packages.find]
